@@ -7,6 +7,10 @@ class Player:
         self.co2_used = 0
         self.money = 0.0
         self.airports: list[AirPort] = []
+        self.cache = {
+            "airport_max_len": 0,
+            "airport_price_len": 0
+        }
 
     # Etene 1 peli tick
     def tick(self) -> None:
@@ -23,6 +27,8 @@ class Player:
 
         self.money -= airport.price
         self.airports.append(airport)
+        self.cache["airport_max_len"] = max(len(airport.name), self.cache["airport_max_len"])
+        self.cache["airport_price_len"] = max(len(str(airport.price)), self.cache["airport_price_len"])
 
         return (True, "Purchase successful")
 
