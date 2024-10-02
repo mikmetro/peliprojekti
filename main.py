@@ -35,23 +35,14 @@ player.purchase_airport(airportt)
 
 player.upgrade_airport(airport, 0)
 
-
-def game_runner():
-    while 1:
-        player.tick()
-        time.sleep(GAME_TICK)
-
-
-# Tee threadistä Daemon thread, muuten thread jää pyörimään ikuisesti vaikka main thread loppuu
-game_thread = threading.Thread(target=game_runner, daemon=True)
-game_thread.start()
-
 current_menu = 1
 
-def game_console():
+def game_runner():
     global current_menu
     prev_menu = current_menu
     while 1:
+        player.tick()
+        
         if prev_menu != current_menu:
             print(f"\x1b[2J")
         prev_menu = current_menu
@@ -69,8 +60,10 @@ def game_console():
             print(HELP_MESSAGE)
         time.sleep(GAME_TICK)
 
-console_thread = threading.Thread(target=game_console, daemon=True)
-console_thread.start()
+
+# Tee threadistä Daemon thread, muuten thread jää pyörimään ikuisesti vaikka main thread loppuu
+game_thread = threading.Thread(target=game_runner, daemon=True)
+game_thread.start()
 
 while 1:
     if keyboard.is_pressed('1'):
