@@ -32,5 +32,5 @@ class SecurityUpgrade(Upgrade):
         super().__init__(name, price, effect, delta_price, delta_effect, max_level)
 
     # Laskee kertoimen turvallisuudelle. Eli jos tapahtumassa on 1% mahdollisuus se lasketaan (tapahtuma_mahdollisuus * security_multiplier) missä security_multiplier < 1
-    def security_multiplier(self) -> int:
+    def security_multiplier(self) -> float:
         return 1 - self.effect * (self.delta_effect ** (self.level - 1)) if self.level > 0 else 0

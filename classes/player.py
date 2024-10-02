@@ -1,6 +1,5 @@
 from .airport import *
-GAME_TICK = 0.2
-
+from constants import GAME_TICK
 
 class Player:
     def __init__(self, name: str) -> None:
