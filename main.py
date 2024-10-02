@@ -47,11 +47,10 @@ game_thread = threading.Thread(target=game_runner, daemon=True)
 game_thread.start()
 
 current_menu = 1
-prev_menu = 1
 
 def game_console():
-    global prev_menu
     global current_menu
+    prev_menu = current_menu
     while 1:
         if prev_menu != current_menu:
             print(f"\x1b[2J")
