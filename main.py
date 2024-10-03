@@ -1,8 +1,8 @@
 import os
 import time
 import threading
-import keyboard
 import cursor
+from pynput import keyboard
 from classes.player import *
 from classes.airport import *
 from classes.upgrades import *
@@ -11,8 +11,6 @@ cursor.hide()
 
 def clear(): return os.system('cls' if os.name == 'nt' else 'clear')
 clear()
-
-CO2_BUDGET = 100000  # Jos pelaaja päästää enemmän co2 kuin tämä luku häviät pelin
 
 print("Tervetuloa peliin!")
 
@@ -33,9 +31,6 @@ for i in range(5):
     player.purchase_airport(AirPort(f"Number {str(i)} Airport", "Finland", 0,0,upgrades))
 player.upgrade_airport(airport, 0)
 
-current_menu = 1
-selected_index = 0
-
 def game_runner():
     while 1:
         # Etene 1 tick
@@ -47,6 +42,9 @@ def game_runner():
 # Tee threadistä Daemon thread, muuten thread jää pyörimään ikuisesti vaikka main thread loppuu
 game_thread = threading.Thread(target=game_runner, daemon=True)
 game_thread.start()
+
+current_menu = 1
+selected_index = 0
 
 def console_runner():
     global current_menu
@@ -78,20 +76,21 @@ def console_runner():
 console_thread = threading.Thread(target=console_runner, daemon=True)
 console_thread.start()
 
-def onkeypress(event):
-    global selected_index
+def on_press(key):
     global current_menu
-    if event.scan_code == 80:
-        selected_index = min(len(player.airports) - 1, selected_index + 1)
-    elif event.scan_code == 72:
+    global selected_index
+    if hasattr(key, 'char'):
+        if key.char in ('1', '2'):
+            current_menu = int(key.char)
+            selected_index = 0
+        elif key.char == '3':
+            exit(0)
+    if key == keyboard.Key.up:
         selected_index = max(0, selected_index - 1)
-    elif event.scan_code in (2,3):
-        current_menu = event.scan_code - 1
-        selected_index = 0
+    elif key == keyboard.Key.down:
+        selected_index = min(len(player.airports) - 1, selected_index + 1)
 
-keyboard.on_press(onkeypress)
-
-while 1: 
-    if keyboard.is_pressed('3'):
-        exit(0)
-    time.sleep(0.05)
+listener = keyboard.Listener(
+    on_press=on_press)
+listener.start()
+listener.join()
