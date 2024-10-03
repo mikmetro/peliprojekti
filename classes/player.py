@@ -1,6 +1,8 @@
 import json
 from .airport import *
+from .upgrades import *
 from constants import GAME_TICK
+import os.path
 
 class Player:
     def __init__(self, name: str) -> None:
@@ -12,7 +14,32 @@ class Player:
             "airport_max_len": 0,
             "airport_price_len": 0
         }
-
+        
+    def create_player(self):
+        if os.path.isfile(f"profiles/{self.name}.json"):
+            try:
+                with open(f"profiles/{self.name}.json", "r") as f:
+                    x = json.load(f)
+                    self.name = x["name"]
+                    self.money = x["money"]
+                    self.co2_used = x["co2_used"]
+                    for i in x["airports"]:
+                        self.airports.append(AirPort(i, x["airports"][i]["country"], x["airports"][i]["price"], x["airports"][i]["co2_generation"], x["airports"][i]["upgrades"]))
+            except:
+                return f"Failed to load profile"
+        else:
+            try:
+                with open(f"profiles/{self.name}.json", "w") as f:
+                    json.dump({
+                        "name": self.name,
+                        "money": self.money,
+                        "co2_used": self.co2_used,
+                        "airports": {},
+                    }, f)
+                    return "Profile created succsessfully"
+            except:
+                return "Failed to create profile"
+          
     # Etene 1 peli tick
     def tick(self) -> None:
         for i in self.airports:
@@ -57,7 +84,6 @@ class Player:
                     "country": i.country,
                     "price": i.price,
                     "co2_generation": i.co2_generation,
-                    "upgrades": [i.upgrades[0].level, i.upgrades[1].level, i.upgrades[2].level]
                 } for i in self.airports
             }
         }

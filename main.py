@@ -15,7 +15,8 @@ clear()
 print("Tervetuloa peliin!")
 
 # basic mekanismi
-player = Player(input("Anna nimesi: "))
+player = Player(input("Anna nimesi: ").lower())
+print(player.create_player())
 player.money = 100000
 upgrades = (
     IncomeUpgrade("Tuotto", 10000, 5000, 1.5, 1.5, 5),
