@@ -47,11 +47,18 @@ class Player:
         return (True, "Purchase successful")
 
     def save_profile(self) -> None:
-        dict = {
+        with open(f"profiles/{self.name}.json", "w") as f:
+            x = {
             "name": self.name,
             "money": self.money,
             "co2_used": self.co2_used,
+            "airports": {
+                i.name: {
+                    "country": i.country,
+                    "price": i.price,
+                    "co2_generation": i.co2_generation,
+                    "upgrades": [i.upgrades[0].level, i.upgrades[1].level, i.upgrades[2].level]
+                } for i in self.airports
+            }
         }
-        
-        with open(f"profiles/{self.name}.json", "w") as f:
-            json.dump(dict, f)
+            json.dump(x, f)

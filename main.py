@@ -71,11 +71,6 @@ def console_runner():
                     print(f"\x1b[7m{CLR}", end="")
                 print(f"{i.name}{" "*name_space}{i.price}${" "*price_space}{i.co2_generation:.0f}kg{CLR}\x1b[0m")
             print(HELP_MESSAGE)
-        elif current_menu == 3:
-            print(f"{TOP}Your name: {player.name}{CLR}\n")
-            player.save_profile()
-            print("Profile saved")
-            print(HELP_MESSAGE)
         time.sleep(0.04) # 25fps
 
 console_thread = threading.Thread(target=console_runner, daemon=True)
@@ -85,9 +80,12 @@ def on_press(key):
     global current_menu
     global selected_index
     if hasattr(key, 'char'):
-        if key.char in ('1', '2', '3'):
+        if key.char in ('1', '2'):
             current_menu = int(key.char)
             selected_index = 0
+        elif key.char == '3':
+            player.save_profile()
+            print("Profile saved")
         elif key.char == '4':
             exit(0)
     if key == keyboard.Key.up:
