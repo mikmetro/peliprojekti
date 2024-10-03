@@ -1,3 +1,4 @@
+import json
 from .airport import *
 from constants import GAME_TICK
 
@@ -44,3 +45,13 @@ class Player:
         upgrade.level += 1
 
         return (True, "Purchase successful")
+
+    def save_profile(self) -> None:
+        dict = {
+            "name": self.name,
+            "money": self.money,
+            "co2_used": self.co2_used,
+        }
+        
+        with open(f"profiles/{self.name}.json", "w") as f:
+            json.dump(dict, f)
