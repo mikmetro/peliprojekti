@@ -1,10 +1,10 @@
-GAME_TICK = 0.2
+GAME_TICK: float = 0.2
 UP = "\x1b[1A"
 DOWN = "\x1b[1B"
 LEFT = "\x1b[1C"
 RIGHT = "\x1b[1D"
 CLR = "\x1b[0K"
 TOP = "\x1b[0;0H"
-HELP_MESSAGE = f"{CLR}{DOWN}1 - Main{CLR}\n2 - Airports{CLR}\n3 - Save{CLR}\n4 - Quit{CLR}"
-CO2_BUDGET = 100000  # Jos pelaaja päästää enemmän co2 kuin tämä luku häviät pelin
-AUTOSAVE_DELAY = 1 # Kannattaa nostaa jossain vaiheessa
+CO2_BUDGET: int = 100000  # Jos pelaaja päästää enemmän co2 kuin tämä luku häviät pelin
+AUTOSAVE_DELAY: int = 5
+AIRPORT_MENU_TABS = ["Inventory", "Shop"]
