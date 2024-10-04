@@ -15,21 +15,8 @@ clear()
 print("Tervetuloa peliin!")
 
 # basic mekanismi
-player = Player(input("Anna nimesi: "))
-player.money = 100000
-upgrades = (
-    IncomeUpgrade("Tuotto", 10000, 5000, 1.5, 1.5, 5),
-    Co2Upgrade("Co2", 10000, 5000, 1.5, 1.5, 5),
-    SecurityUpgrade("Security", 10000, 5000, 1.5, 1.5, 5)
-)
-airport = AirPort("Los Angeles Airport", "Iceland", 50000, 10, upgrades)
-airportt = AirPort("Abu Dhabi Airport", "Iceland", 50000, 10, upgrades)
-
-player.purchase_airport(airport)
-player.purchase_airport(airportt)
-for i in range(5):
-    player.purchase_airport(AirPort(f"Number {str(i)} Airport", "Finland", 0,0,upgrades))
-player.upgrade_airport(airport, 0)
+player = Player(input("Anna nimesi: ").lower())
+print(player.create_player())
 
 def game_runner():
     while 1:
@@ -42,6 +29,14 @@ def game_runner():
 # Tee threadistä Daemon thread, muuten thread jää pyörimään ikuisesti vaikka main thread loppuu
 game_thread = threading.Thread(target=game_runner, daemon=True)
 game_thread.start()
+
+def auto_save():
+    while 1:
+        player.save_profile()
+        time.sleep(AUTOSAVE_DELAY)
+
+save_thread = threading.Thread(target=auto_save, daemon=True)
+save_thread.start()
 
 current_menu = 1
 selected_index = 0
@@ -84,6 +79,9 @@ def on_press(key):
             current_menu = int(key.char)
             selected_index = 0
         elif key.char == '3':
+            player.save_profile()
+            print("Profile saved")
+        elif key.char == '4':
             exit(0)
     if key == keyboard.Key.up:
         selected_index = max(0, selected_index - 1)
