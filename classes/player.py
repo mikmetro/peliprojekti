@@ -4,6 +4,8 @@ from .upgrades import *
 from constants import GAME_TICK
 import os.path
 
+from classes import upgrades
+
 class Player:
     def __init__(self, name: str) -> None:
         self.name = name
@@ -19,24 +21,21 @@ class Player:
         if os.path.isfile(f"profiles/{self.name}.json"):
             try:
                 with open(f"profiles/{self.name}.json", "r") as f:
-                    x = json.load(f)
-                    self.name = x["name"]
-                    self.money = x["money"]
-                    self.co2_used = x["co2_used"]
-                    for i in x["airports"]:
-                        self.airports.append(AirPort(i, x["airports"][i]["country"], x["airports"][i]["price"], x["airports"][i]["co2_generation"], x["airports"][i]["upgrades"]))
+                    user_data = json.load(f)
+                    self.name = user_data["name"]
+                    self.money = user_data["money"]
+                    self.co2_used = user_data["co2_used"]
+                    for i in user_data["airports"]:
+                        airport = user_data["airports"][i]
+                        ups = [airport["upgrades"][j] for j in range(3)]
+                        ups = (IncomeUpgrade(*ups[0].values()), Co2Upgrade(*ups[1].values()), SecurityUpgrade(*ups[2].values()))
+                        self.airports.append(AirPort(i, airport["country"], airport["price"], airport["co2_generation"], ups))
+                    self.cache = user_data["cache"]
             except:
-                return f"Failed to load profile"
+                return "Failed to load profile"
         else:
             try:
-                with open(f"profiles/{self.name}.json", "w") as f:
-                    json.dump({
-                        "name": self.name,
-                        "money": self.money,
-                        "co2_used": self.co2_used,
-                        "airports": {},
-                    }, f)
-                    return "Profile created succsessfully"
+                self.save_profile()
             except:
                 return "Failed to create profile"
           
@@ -76,15 +75,12 @@ class Player:
     def save_profile(self) -> None:
         with open(f"profiles/{self.name}.json", "w") as f:
             x = {
-            "name": self.name,
-            "money": self.money,
-            "co2_used": self.co2_used,
-            "airports": {
-                i.name: {
-                    "country": i.country,
-                    "price": i.price,
-                    "co2_generation": i.co2_generation,
-                } for i in self.airports
+                "name": self.name,
+                "money": self.money,
+                "co2_used": self.co2_used,
+                "airports": {
+                    i.name: i.get() for i in self.airports
+                },
+                "cache": self.cache
             }
-        }
             json.dump(x, f)

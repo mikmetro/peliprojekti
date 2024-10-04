@@ -7,3 +7,4 @@ CLR = "\x1b[0K"
 TOP = "\x1b[0;0H"
 HELP_MESSAGE = f"{CLR}{DOWN}1 - Main{CLR}\n2 - Airports{CLR}\n3 - Save{CLR}\n4 - Quit{CLR}"
 CO2_BUDGET = 100000  # Jos pelaaja päästää enemmän co2 kuin tämä luku häviät pelin
+AUTOSAVE_DELAY = 1 # Kannattaa nostaa jossain vaiheessa
