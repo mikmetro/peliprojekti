@@ -20,7 +20,7 @@ class Player:
         
     def create_player(self, airports: list[AirPort]):
         if os.path.isfile(f"profiles/{self.name}.json"):
-            
+            try:
                 with open(f"profiles/{self.name}.json", "r") as f:
                     user_data = json.load(f)
                     self.name = user_data["name"]
@@ -33,14 +33,10 @@ class Player:
                         self.airports.append(AirPort(airport['id'], i, airport["country"], airport["price"], airport["co2_generation"], ups))
                     self.cache = user_data["cache"]
                     PLAYER_AIRPORTS = [airport.name for airport in self.airports]
-                    with open(f"logs.json", "a") as f:
-                        json.dump(PLAYER_AIRPORTS,f)
                     AVAILABLE_AIRPORTS: list[AirPort] = [i for i in airports if i.name not in PLAYER_AIRPORTS]
-                    print(AVAILABLE_AIRPORTS)
-                    with open(f"logs.json", "a") as f:
-                        json.dump(PLAYER_AIRPORTS,f)
                     self.available_airports = AVAILABLE_AIRPORTS
-      
+            except:
+                return "Failed to load profile"
         else:
             try:
                 self.save_profile()
