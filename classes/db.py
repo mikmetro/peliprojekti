@@ -51,9 +51,7 @@ class Database:
         
   def upgrades(self) -> Any:
     get_upgrades = self.fetch_query("select name, level, price, effect, delta_price, delta_effect, max_level from upgrades;")
-    
-    upgrades = (IncomeUpgrade(**get_upgrades[0]), Co2Upgrade(**get_upgrades[1]), SecurityUpgrade(**get_upgrades[2]))
-    return upgrades
+    return get_upgrades
 
   def all_airports(self) -> Any:
     game_airports = self.fetch_query("select game_airports.*, airport.name, airport.municipality from game_airports INNER JOIN airport on game_airports.location = airport.ident;")

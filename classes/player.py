@@ -4,8 +4,6 @@ from .upgrades import *
 from constants import GAME_TICK
 import os.path
 
-from classes import upgrades
-
 class Player:
     def __init__(self, name: str, airports: list[AirPort]) -> None:
         self.name = name
@@ -20,7 +18,7 @@ class Player:
         
     def create_player(self, airports: list[AirPort]):
         if os.path.isfile(f"profiles/{self.name}.json"):
-            
+            try:
                 with open(f"profiles/{self.name}.json", "r") as f:
                     user_data = json.load(f)
                     self.name = user_data["name"]
@@ -33,14 +31,10 @@ class Player:
                         self.airports.append(AirPort(airport['id'], i, airport["country"], airport["price"], airport["co2_generation"], ups))
                     self.cache = user_data["cache"]
                     PLAYER_AIRPORTS = [airport.name for airport in self.airports]
-                    with open(f"logs.json", "a") as f:
-                        json.dump(PLAYER_AIRPORTS,f)
                     AVAILABLE_AIRPORTS: list[AirPort] = [i for i in airports if i.name not in PLAYER_AIRPORTS]
-                    print(AVAILABLE_AIRPORTS)
-                    with open(f"logs.json", "a") as f:
-                        json.dump(PLAYER_AIRPORTS,f)
                     self.available_airports = AVAILABLE_AIRPORTS
-      
+            except:
+                return "Failed to load profile"
         else:
             try:
                 self.save_profile()
@@ -50,9 +44,8 @@ class Player:
     # Etene 1 peli tick
     def tick(self) -> None:
         for i in self.airports:
-            self.money += i.upgrades[0].tick() * GAME_TICK
-            self.co2_used += (i.co2_generation -
-                              i.upgrades[1].co2_decrease()) * GAME_TICK
+            self.money += i.upgrades[0].get_effect() * GAME_TICK
+            self.co2_used = max(0, self.co2_used + (i.co2_generation - i.upgrades[1].get_effect()) * GAME_TICK)
 
     # Tämän funktion voi laittaa joskus purchase_airport funktioon
     def give_airport(self, airport: AirPort) -> tuple[bool, str]:

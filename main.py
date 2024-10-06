@@ -17,12 +17,13 @@ clear()
 
 print("Tervetuloa peliin!")
 
+keyboard_controller = keyboard.Controller()
 db = Database()
 upgrades = db.upgrades()
 airports = db.all_airports()
 
 ALL_AIRPORTS: list[AirPort] = [
-    AirPort(i['id'], i['name'], i['municipality'], i['price'], i['co2_generation'], upgrades) for i in airports
+    AirPort(i['id'], i['name'], i['municipality'], i['price'], i['co2_generation'], (IncomeUpgrade(**upgrades[0]), Co2Upgrade(**upgrades[1]), SecurityUpgrade(**upgrades[2]))) for i in airports
 ]
 
 # basic mekanismi
@@ -31,7 +32,6 @@ print(player.create_player(ALL_AIRPORTS))
 
 if len(player.airports) == 0:
     player.give_airport(ALL_AIRPORTS[randint(0, len(ALL_AIRPORTS) - 1)])
-
 
 def game_runner():
     while 1:
@@ -54,7 +54,6 @@ def auto_save():
         if(time_till_save == 0):
             player.save_profile()
             time_till_save = AUTOSAVE_DELAY
-        
 
 save_thread = threading.Thread(target=auto_save, daemon=True)
 save_thread.start()
@@ -62,6 +61,7 @@ save_thread.start()
 current_menu = 1
 selected_index = 0
 selected_tab = 0
+airport_index = 0
 
 def console_runner():
     global current_menu
@@ -116,7 +116,20 @@ def console_runner():
                     print(f"{i.name}{" "*name_space}{price_indicator}${" "*price_space}{i.co2_generation:.0f}kg{CLR}\x1b[0m")
 
         elif current_menu == 11:
-            print(player.airports[selected_index].__dict__)
+            print(f"{player.airports[airport_index].name}\n")
+            ups = player.airports[airport_index].upgrades
+
+            largest_name = [0,0,0]
+            for i in ups:
+                largest_name[0] = max(largest_name[0], len(i.name))
+                largest_name[1] = max(largest_name[1], len(i.display_effect()))
+                largest_name[2] = max(largest_name[2], len(i.display_price()))
+            
+            print("Press Enter to upgrade")
+            for (index, i) in enumerate(ups):
+                if index == selected_index:
+                        print(f"\x1b[7m{CLR}", end="")
+                print(f"{i.name} {i.level}{" "*(largest_name[0] - len(i.name) + 3)}{i.display_effect()}{" "*(largest_name[1] - len(i.display_effect()) + 3)}{i.display_price()}\x1b[0m")
 
         print(HELP_MESSAGE())
         time.sleep(0.04) # 25fps
@@ -129,6 +142,7 @@ def on_press(key):
     global selected_index
     global time_till_save
     global selected_tab
+    global airport_index
     if hasattr(key, 'char'):
         if key.char in ('1', '2'):
             current_menu = int(key.char)
@@ -139,28 +153,38 @@ def on_press(key):
             print("Profile saved")
         elif key.char == '4':
             exit(0)
-    if key == keyboard.Key.up:
-        selected_index = max(0, selected_index - 1)
-    elif key == keyboard.Key.down:
-        if selected_tab == 0:
-            selected_index = min(len(player.airports) - 1, selected_index + 1)
-        elif selected_tab == 1:
-            selected_index = min(len(player.available_airports) - 1, selected_index + 1)
-    elif key == keyboard.Key.left:
-        selected_tab = max(0, selected_tab - 1)
-        selected_index = 0
-    elif key == keyboard.Key.right:
-        selected_tab = min(len(AIRPORT_MENU_TABS) - 1, selected_tab + 1)
-        selected_index = 0
-    elif key == keyboard.Key.enter:
-        if current_menu == 2:
-            if selected_tab == 0:
-                if len(player.airports) != 0:
-                    # Avaa lentokentän info ja päivitykset
-                    current_menu = 11
-            elif selected_tab == 1:
-                if len(player.available_airports) != 0 and player.purchase_airport(player.available_airports[selected_index])[0]:
-                    clear()
+    match key:
+        case keyboard.Key.up:
+            selected_index = max(0, selected_index - 1)
+        case keyboard.Key.down:
+            if current_menu == 2:
+                if selected_tab == 0:
+                    selected_index = min(len(player.airports) - 1, selected_index + 1)
+                elif selected_tab == 1:
+                    selected_index = min(len(player.available_airports) - 1, selected_index + 1)
+            elif current_menu == 11:
+                selected_index = min(len(player.airports[airport_index].upgrades) - 1, selected_index + 1)
+        case keyboard.Key.left:
+            selected_tab = max(0, selected_tab - 1)
+            selected_index = 0
+        case keyboard.Key.right:
+            selected_tab = min(len(AIRPORT_MENU_TABS) - 1, selected_tab + 1)
+            selected_index = 0
+        case keyboard.Key.enter:
+            if current_menu == 2:
+                if selected_tab == 0:
+                    if len(player.airports) != 0:
+                        # Avaa lentokentän info ja päivitykset
+                        current_menu = 11
+                        airport_index = selected_index
+                        selected_index = 0
+                elif selected_tab == 1:
+                    if len(player.available_airports) != 0 and player.purchase_airport(player.available_airports[selected_index])[0]:
+                        clear()
+            elif current_menu == 11:
+                player.airports[airport_index].upgrades[selected_index].upgrade()
+            keyboard_controller.release(keyboard.Key.enter)
+
 
 listener = keyboard.Listener(
     on_press=on_press)
