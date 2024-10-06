@@ -16,7 +16,7 @@ clear()
 
 print("Tervetuloa peliin!")
 
-upgrades = (IncomeUpgrade("Tuotto", 2000, 500, 1.5, 1.6, 5),Co2Upgrade("Ympäristöystävällisyys", 2000, 500, 1.5, 1.6, 5),SecurityUpgrade("Turvallisuus", 2000, 500, 1.5, 1.6, 5))
+upgrades = (IncomeUpgrade("Tuotto", 2000, 500, 1.35, 1.7, 7),Co2Upgrade("Ympäristöystävällisyys", 2000, 500, 1.5, 1.6, 5),SecurityUpgrade("Turvallisuus", 2000, 500, 1.5, 1.6, 5))
 ALL_AIRPORTS: list[AirPort] = [
     AirPort("Helsinki Airport", "Finland", 10000, 40, upgrades),
     AirPort("Bordeaux Airport", "France", 50000, 150, upgrades),
@@ -76,11 +76,12 @@ def console_runner():
         prev_menu = current_menu
         prev_tab = selected_tab
         print(f"\n\n\n")
+
         if current_menu == 1:
             print(f"{TOP}Your name: {player.name}{CLR}\n{CLR}")
             print(f"Current money: {player.money:.2f}${CLR}")
             print(f"CO2 used: {player.co2_used:.0f}kg/{CO2_BUDGET}kg Diff {CO2_BUDGET - player.co2_used} {CLR}")
-            print(HELP_MESSAGE())
+
         elif current_menu == 2:
             print(f"{TOP}Your name: {player.name}{CLR}\n")
             for index , i in enumerate(AIRPORT_MENU_TABS):
@@ -106,9 +107,16 @@ def console_runner():
                     price_space = player.cache["airport_price_len"] - len(str(i.price)) + 2
                     if index == selected_index:
                         print(f"\x1b[7m{CLR}", end="")
-                    print(f"{i.name}{" "*name_space}{i.price}${" "*price_space}{i.co2_generation:.0f}kg{CLR}\x1b[0m")
 
-            print(HELP_MESSAGE())
+                    # Jos pelaaja pystyy ostamaan lentokentän muuta hinnan väri vihreäksi, muuten väri on punainen
+                    price_indicator = (f"\x1b[31m" if i.price > player.money else f"\x1b[32m") + str(i.price) + f"\x1b[39m"
+
+                    print(f"{i.name}{" "*name_space}{price_indicator}${" "*price_space}{i.co2_generation:.0f}kg{CLR}\x1b[0m")
+
+        elif current_menu == 11:
+            print(f"{TOP}Your name: {player.name}{CLR}\n")
+
+        print(HELP_MESSAGE())
         time.sleep(0.04) # 25fps
 
 console_thread = threading.Thread(target=console_runner, daemon=True)

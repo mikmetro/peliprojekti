@@ -79,16 +79,19 @@ class Player:
     def remove_from_available(self, airport: AirPort) -> None:
         self.available_airports.pop(self.available_airports.index(airport))
 
+    # Path voi myöhemmin vaihtaa Upgrade luokka tyypiksi
     def upgrade_airport(self, airport: AirPort, path: int) -> tuple[bool, str]:
         upgrade = airport.upgrades[path]
         if self.money < upgrade.price:
             return (False, "Insufficient funds")
-        if upgrade.level == upgrade.max_level:
-            return (False, "Upgrade already maxed out")
 
-        self.money -= upgrade.price * (upgrade.delta_price ** upgrade.level)
+        upgradestatus = upgrade.upgrade()
 
-        upgrade.level += 1
+        if upgradestatus[0] == False:
+            return upgradestatus
+            
+        self.money -= upgrade.price
+
 
         return (True, "Purchase successful")
 
