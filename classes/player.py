@@ -30,7 +30,7 @@ class Player:
                         airport = user_data["airports"][i]
                         ups = [airport["upgrades"][j] for j in range(3)]
                         ups = (IncomeUpgrade(*ups[0].values()), Co2Upgrade(*ups[1].values()), SecurityUpgrade(*ups[2].values()))
-                        self.airports.append(AirPort(i, airport["country"], airport["price"], airport["co2_generation"], ups))
+                        self.airports.append(AirPort(i, airport['id'], airport["country"], airport["price"], airport["co2_generation"], ups))
                     self.cache = user_data["cache"]
                     PLAYER_AIRPORTS = [airport.name for airport in self.airports]
                     AVAILABLE_AIRPORTS: list[AirPort] = [i for i in airports if i.name not in PLAYER_AIRPORTS]

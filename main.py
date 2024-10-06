@@ -7,6 +7,7 @@ from pynput import keyboard
 from classes.player import *
 from classes.airport import *
 from classes.upgrades import *
+from classes.db import *
 from constants import *
 from random import randint
 cursor.hide()
@@ -16,12 +17,14 @@ clear()
 
 print("Tervetuloa peliin!")
 
-upgrades = (IncomeUpgrade("Tuotto", 2000, 500, 1.35, 1.7, 7),Co2Upgrade("Ympäristöystävällisyys", 2000, 500, 1.5, 1.6, 5),SecurityUpgrade("Turvallisuus", 2000, 500, 1.5, 1.6, 5))
+db = Database()
+upgrades = db.upgrades()
+airports = db.all_airports()
+
 ALL_AIRPORTS: list[AirPort] = [
-    AirPort("Helsinki Airport", "Finland", 10000, 40, upgrades),
-    AirPort("Bordeaux Airport", "France", 50000, 150, upgrades),
-    AirPort("Birmingham Airport", "England", 20000, 75, upgrades)
+    AirPort(i['id'], i['name'], i['municipality'], i['price'], i['co2_generation'], upgrades) for i in airports
 ]
+
 
 # basic mekanismi
 player = Player(input("Anna nimesi: ").lower(), ALL_AIRPORTS)
