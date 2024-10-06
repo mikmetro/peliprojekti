@@ -25,7 +25,6 @@ ALL_AIRPORTS: list[AirPort] = [
     AirPort(i['id'], i['name'], i['municipality'], i['price'], i['co2_generation'], upgrades) for i in airports
 ]
 
-
 # basic mekanismi
 player = Player(input("Anna nimesi: ").lower(), ALL_AIRPORTS)
 print(player.create_player(ALL_AIRPORTS))
