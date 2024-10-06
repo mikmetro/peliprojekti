@@ -2,7 +2,8 @@ from .upgrades import *
 
 
 class AirPort:
-    def __init__(self, name: str, country: str, price: float, co2_generation: int, upgrades: tuple[IncomeUpgrade, Co2Upgrade, SecurityUpgrade]) -> None:
+    def __init__(self, id: int, name: str, country: str, price: float, co2_generation: int, upgrades: tuple[IncomeUpgrade, Co2Upgrade, SecurityUpgrade]) -> None:
+        self.id = id
         self.name = name
         self.country = country
         self.price = price
