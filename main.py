@@ -1,4 +1,3 @@
-import enum
 import os
 import time
 import threading
@@ -7,6 +6,7 @@ from pynput import keyboard
 from classes.player import *
 from classes.airport import *
 from classes.upgrades import *
+from classes.db import *
 from classes.db import *
 from constants import *
 from random import randint
