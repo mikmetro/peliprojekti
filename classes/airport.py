@@ -12,6 +12,7 @@ class AirPort:
 
     def get(self) -> dict[str, str | int | float | list[dict[str, int | float | str]]]:
         return {
+                "id": self.id,
                 "country": self.country,
                 "price": self.price,
                 "co2_generation": self.co2_generation,

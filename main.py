@@ -70,7 +70,8 @@ def console_runner():
     prev_tab = selected_tab
 
     HELP_MESSAGE = lambda: f"{CLR}{DOWN}1 - Main{CLR}\n2 - Airports{CLR}\n3 - Save ({time_till_save}){CLR}\n4 - Quit{CLR}"
-
+    
+    print("\x1b[2J\x1b[3J")
     while 1:
         # Näytä menu
         if prev_menu != current_menu or prev_tab != selected_tab:
@@ -78,14 +79,13 @@ def console_runner():
         prev_menu = current_menu
         prev_tab = selected_tab
         print(f"\n\n\n")
+        print(f"{TOP}Your name: {player.name}{CLR}\n")
 
         if current_menu == 1:
-            print(f"{TOP}Your name: {player.name}{CLR}\n{CLR}")
             print(f"Current money: {player.money:.2f}${CLR}")
-            print(f"CO2 used: {player.co2_used:.0f}kg/{CO2_BUDGET}kg Diff {CO2_BUDGET - player.co2_used} {CLR}")
+            print(f"CO2 used: {player.co2_used:.0f}kg/{CO2_BUDGET}kg Diff {(CO2_BUDGET - player.co2_used):.0f} {CLR}")
 
         elif current_menu == 2:
-            print(f"{TOP}Your name: {player.name}{CLR}\n")
             for index , i in enumerate(AIRPORT_MENU_TABS):
                 if index == selected_tab:
                     print(f"\x1b[7m{CLR}", end="")
@@ -116,7 +116,7 @@ def console_runner():
                     print(f"{i.name}{" "*name_space}{price_indicator}${" "*price_space}{i.co2_generation:.0f}kg{CLR}\x1b[0m")
 
         elif current_menu == 11:
-            print(f"{TOP}Your name: {player.name}{CLR}\n")
+            print(player.airports[selected_index].__dict__)
 
         print(HELP_MESSAGE())
         time.sleep(0.04) # 25fps
