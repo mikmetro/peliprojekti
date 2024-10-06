@@ -8,6 +8,17 @@ class Upgrade:
         self.max_level = max_level
         self.level = level
 
+    def upgrade(self) -> tuple[bool, str]:
+        if self.level == self.max_level:
+            return (False, "Upgrade already maxed out")
+
+        self.level += 1
+
+        return (True, "Successfully upgraded")
+
+    def get_price(self) -> float:
+        return self.price * (self.delta_price ** self.level)
+
 
 class IncomeUpgrade(Upgrade):
     def __init__(self, name: str, price: float, effect: float, delta_price: float, delta_effect: float, max_level: int, level: int=0) -> None:

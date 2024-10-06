@@ -20,7 +20,7 @@ class Player:
         
     def create_player(self, airports: list[AirPort]):
         if os.path.isfile(f"profiles/{self.name}.json"):
-            try:
+            
                 with open(f"profiles/{self.name}.json", "r") as f:
                     user_data = json.load(f)
                     self.name = user_data["name"]
@@ -30,13 +30,17 @@ class Player:
                         airport = user_data["airports"][i]
                         ups = [airport["upgrades"][j] for j in range(3)]
                         ups = (IncomeUpgrade(*ups[0].values()), Co2Upgrade(*ups[1].values()), SecurityUpgrade(*ups[2].values()))
-                        self.airports.append(AirPort(i, airport['id'], airport["country"], airport["price"], airport["co2_generation"], ups))
+                        self.airports.append(AirPort(airport['id'], i, airport["country"], airport["price"], airport["co2_generation"], ups))
                     self.cache = user_data["cache"]
                     PLAYER_AIRPORTS = [airport.name for airport in self.airports]
+                    with open(f"logs.json", "a") as f:
+                        json.dump(PLAYER_AIRPORTS,f)
                     AVAILABLE_AIRPORTS: list[AirPort] = [i for i in airports if i.name not in PLAYER_AIRPORTS]
+                    print(AVAILABLE_AIRPORTS)
+                    with open(f"logs.json", "a") as f:
+                        json.dump(PLAYER_AIRPORTS,f)
                     self.available_airports = AVAILABLE_AIRPORTS
-            except:
-                return "Failed to load profile"
+      
         else:
             try:
                 self.save_profile()
@@ -79,16 +83,17 @@ class Player:
     def remove_from_available(self, airport: AirPort) -> None:
         self.available_airports.pop(self.available_airports.index(airport))
 
+    # Path voi myöhemmin vaihtaa Upgrade luokka tyypiksi
     def upgrade_airport(self, airport: AirPort, path: int) -> tuple[bool, str]:
         upgrade = airport.upgrades[path]
-        if self.money < upgrade.price:
+        if self.money < upgrade.get_price():
             return (False, "Insufficient funds")
-        if upgrade.level == upgrade.max_level:
-            return (False, "Upgrade already maxed out")
 
-        self.money -= upgrade.price * (upgrade.delta_price ** upgrade.level)
-
-        upgrade.level += 1
+        try_upgrade = upgrade.upgrade()
+        if try_upgrade[0] == False:
+            return try_upgrade
+            
+        self.money -= upgrade.get_price()
 
         return (True, "Purchase successful")
 
