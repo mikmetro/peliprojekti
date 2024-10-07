@@ -33,17 +33,10 @@ print(player.create_player(ALL_AIRPORTS))
 if len(player.airports) == 0:
     player.give_airport(ALL_AIRPORTS[randint(0, len(ALL_AIRPORTS) - 1)])
 
-def game_runner():
-    while 1:
-        # Etene 1 tick
-        player.tick()
-
-        # Tick delay
-        time.sleep(GAME_TICK)
-
-# Tee threadistä Daemon thread, muuten thread jää pyörimään ikuisesti vaikka main thread loppuu
-game_thread = threading.Thread(target=game_runner, daemon=True)
-game_thread.start()
+current_menu = 1
+selected_index = 0
+selected_tab = 0
+airport_index = 0
 
 time_till_save = AUTOSAVE_DELAY
 def auto_save():
@@ -58,18 +51,13 @@ def auto_save():
 save_thread = threading.Thread(target=auto_save, daemon=True)
 save_thread.start()
 
-current_menu = 1
-selected_index = 0
-selected_tab = 0
-airport_index = 0
-
 def console_runner():
     global current_menu
     global selected_tab
     prev_menu = current_menu
     prev_tab = selected_tab
 
-    HELP_MESSAGE = lambda: f"{CLR}{DOWN}1 - Main{CLR}\n2 - Airports{CLR}\n3 - Save ({time_till_save}){CLR}\n4 - Quit{CLR}"
+    HELP_MESSAGE = lambda: f"{CLR}{DOWN}1 - Etusivu{CLR}\n2 - Lentokentät{CLR}\n3 - Tallenna ({time_till_save}){CLR}\n4 - Lopeta{CLR}"
     
     print("\x1b[2J\x1b[3J")
     while 1:
@@ -79,11 +67,16 @@ def console_runner():
         prev_menu = current_menu
         prev_tab = selected_tab
         print(f"\n\n\n")
-        print(f"{TOP}Your name: {player.name}{CLR}\n")
+        print(f"{TOP}Anna nimi: {player.name}{CLR}   Aikaa jäljellä: {player.display_time()}\n")
+
+        if current_menu == 99:
+            print(f"\x1b[43m\x1b[30mVoitit pelin!\x1b[0m")
+        elif current_menu == 98:
+            print(f"\x1b[41m\x1b[30mHävisit pelin!\x1b[0m")
 
         if current_menu == 1:
-            print(f"Current money: {player.money:.2f}${CLR}")
-            print(f"CO2 used: {player.co2_used:.0f}kg/{CO2_BUDGET}kg Diff {(CO2_BUDGET - player.co2_used):.0f} {CLR}")
+            print(f"Raha: {player.money:.2f}$/{WIN_REQUIREMENT:.2f}$ Diff {(WIN_REQUIREMENT - player.money):.2f}$ {CLR}")
+            print(f"CO2 päästöt: {player.co2_used:.0f}kg/{CO2_BUDGET}kg Diff {(CO2_BUDGET - player.co2_used):.0f} {CLR}")
 
         elif current_menu == 2:
             for index , i in enumerate(AIRPORT_MENU_TABS):
@@ -93,7 +86,7 @@ def console_runner():
             print("\x1b[0m\n")
             
             if selected_tab == 0:
-                print("Press Enter to select")
+                print("Valitse Enter napilla")
                 for index, i in enumerate(player.airports):
                     # Voi olla olemassa parempi tapa tehdä samanpituiset välit
                     name_space = player.cache["airport_max_len"] - len(i.name) + 3
@@ -102,7 +95,7 @@ def console_runner():
                         print(f"\x1b[7m{CLR}", end="")
                     print(f"{i.name}{" "*name_space}{i.price}${" "*price_space}{i.co2_generation:.0f}kg{CLR}\x1b[0m")
             elif selected_tab == 1:
-                print("Press Enter to purchase")
+                print("Osta Enter napilla")
                 for index, i in enumerate(player.available_airports):
                     # Voi olla olemassa parempi tapa tehdä samanpituiset välit
                     name_space = player.cache["airport_max_len"] - len(i.name) + 3
@@ -125,11 +118,14 @@ def console_runner():
                 largest_name[1] = max(largest_name[1], len(i.display_effect()))
                 largest_name[2] = max(largest_name[2], len(i.display_price()))
             
-            print("Press Enter to upgrade")
+            print("Päivitä Enter napilla")
             for (index, i) in enumerate(ups):
                 if index == selected_index:
                         print(f"\x1b[7m{CLR}", end="")
-                print(f"{i.name} {i.level}{" "*(largest_name[0] - len(i.name) + 3)}{i.display_effect()}{" "*(largest_name[1] - len(i.display_effect()) + 3)}{i.display_price()}\x1b[0m")
+
+                # Jos pelaaja pystyy ostamaan lentokentän muuta hinnan väri vihreäksi, muuten väri on punainen
+                price_indicator = (f"\x1b[31m" if i.get_price() > player.money else f"\x1b[32m") + i.display_price() + f"\x1b[39m"
+                print(f"{i.name} {i.level}{" "*(largest_name[0] - len(i.name) + 3)}{i.display_effect()}{" "*(largest_name[1] - len(i.display_effect()) + 3)}{price_indicator}\x1b[0m")
 
         print(HELP_MESSAGE())
         time.sleep(0.04) # 25fps
@@ -137,12 +133,29 @@ def console_runner():
 console_thread = threading.Thread(target=console_runner, daemon=True)
 console_thread.start()
 
+def game_runner():
+    global current_menu
+    while 1:
+        # Etene 1 tick
+        player.tick()
+        if player.money > WIN_REQUIREMENT:
+            current_menu = 99
+        elif player.time_left <= 0:
+            current_menu = 98
+        # Tick delay
+        time.sleep(GAME_TICK)
+
+# Tee threadistä Daemon thread, muuten thread jää pyörimään ikuisesti vaikka main thread loppuu
+game_thread = threading.Thread(target=game_runner, daemon=True)
+game_thread.start()
+
 def on_press(key):
     global current_menu
     global selected_index
     global time_till_save
     global selected_tab
     global airport_index
+    if current_menu in (98,99): exit(0)
     if hasattr(key, 'char'):
         if key.char in ('1', '2'):
             current_menu = int(key.char)
@@ -150,7 +163,7 @@ def on_press(key):
         elif key.char == '3':
             player.save_profile()
             time_till_save = AUTOSAVE_DELAY
-            print("Profile saved")
+            print("Profiili tallennettu")
         elif key.char == '4':
             exit(0)
     match key:
@@ -182,7 +195,7 @@ def on_press(key):
                     if len(player.available_airports) != 0 and player.purchase_airport(player.available_airports[selected_index])[0]:
                         clear()
             elif current_menu == 11:
-                player.airports[airport_index].upgrades[selected_index].upgrade()
+                player.upgrade_airport(player.airports[airport_index], selected_index)
             keyboard_controller.release(keyboard.Key.enter)
 
 

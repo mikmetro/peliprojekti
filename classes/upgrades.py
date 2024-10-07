@@ -53,7 +53,7 @@ class SecurityUpgrade(Upgrade):
 
     # Laskee kertoimen turvallisuudelle. Eli jos tapahtumassa on 1% mahdollisuus se lasketaan (tapahtuma_mahdollisuus * security_multiplier) missä security_multiplier < 1
     def get_effect(self) -> float:
-        return 1 - self.effect * (self.delta_effect ** (self.level - 1)) if self.level > 0 else 0
+        return 1 - self.effect * (self.delta_effect ** (self.level - 1)) if self.level > 0 else 1
 
     def display_effect(self) -> str:
         return f"{self.get_effect():.0f}%"

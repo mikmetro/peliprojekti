@@ -1,9 +1,7 @@
 import json
 from .airport import *
 from .upgrades import *
-from constants import GAME_TICK
-from constants import CO2_BUDGET
-from constants import SECURITY_BASE
+from constants import GAME_TICK, CO2_BUDGET, SECURITY_BASE, CO2_SAKOT, RANDOM_SAKOT, TIME_LIMIT
 import random
 
 import os.path
@@ -19,6 +17,7 @@ class Player:
             "airport_max_len": 0,
             "airport_price_len": 0
         }
+        self.time_left = TIME_LIMIT
         self.available_airports: list[AirPort] = airports
 
     def create_player(self, airports: list[AirPort]):
@@ -29,6 +28,7 @@ class Player:
                     self.name = user_data["name"]
                     self.money = user_data["money"]
                     self.co2_used = user_data["co2_used"]
+                    self.time_left = user_data["time_self"]
                     for i in user_data["airports"]:
                         airport = user_data["airports"][i]
                         ups = [airport["upgrades"][j] for j in range(3)]
@@ -57,26 +57,22 @@ class Player:
             self.co2_used = max(
                 0, self.co2_used + (i.co2_generation - i.upgrades[1].get_effect()) * GAME_TICK)
 
-            if self.co2_used > CO2_BUDGET:                      # Sakko pitää vielä muuttaa
-                if self.money - 1000 < 1:
-                    print("Sait sakon ilmasto rikkeestä.")
-                    self.money = 0
-                else:
-                    self.money = self.money-1000
-                    print("Sait sakon ilmasto rikkeestä.")
+            if self.co2_used > CO2_BUDGET:
+                self.money = max(0, self.money - CO2_SAKOT[random.randint(0, len(CO2_SAKOT) - 1)])
+                self.co2_used = 0
+                print("Sait sakon ilmasto rikkeestä.")
 
-            if random.random() < (SECURITY_BASE + SECURITY_BASE * (i.upgrades[2].get_effect()/100))/100:         # if Random value < (Base + (-Base) * (security/100)) / 100
+            if random.random() < (SECURITY_BASE * i.upgrades[2].get_effect()) * GAME_TICK:         # if Random value < (Base + (-Base) * (security/100)) / 100
+                
                 vakavuus = random.randint(1,100)
-                if vakavuus < 3 and len(self.airports) > 1:
+                if vakavuus <= 10 and len(self.airports) > 1:
                     self.airports.pop(-1)
                     print("Menetit lentokentän vakavasta turvallisuus rikkeestä.")
-                elif self.money - 3000 < 1:
-                    self.money = 0
-                    print("Sait sakon turvallisuus rikkeestä.")
                 else:
-                    self.money = self.money - 3000
+                    self.money = max(0, self.money - RANDOM_SAKOT[random.randint(0, len(RANDOM_SAKOT) - 1)])
                     print("Sait sakon turvallisuus rikkeestä.")
                 # Tämän funktion voi laittaa joskus purchase_airport funktioon
+        self.time_left = max(0, self.time_left - GAME_TICK)
 
     def give_airport(self, airport: AirPort) -> tuple[bool, str]:
         if airport.name in self.airports:
@@ -115,7 +111,6 @@ class Player:
         upgrade = airport.upgrades[path]
         if self.money < upgrade.get_price():
             return (False, "Insufficient funds")
-
         try_upgrade = upgrade.upgrade()
         if try_upgrade[0] == False:
             return try_upgrade
@@ -133,6 +128,12 @@ class Player:
                 "airports": {
                     i.name: i.get() for i in self.airports
                 },
-                "cache": self.cache
+                "cache": self.cache,
+                "time_self": self.time_left
             }
             json.dump(x, f)
+
+    def display_time(self) -> str:
+        minutes = self.time_left // 60
+        seconds = self.time_left - minutes * 60
+        return f"{minutes:.0f}:{seconds:02.0f}"
