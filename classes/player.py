@@ -1,7 +1,7 @@
 import json
 from .airport import *
 from .upgrades import *
-from constants import GAME_TICK, CO2_BUDGET, SECURITY_BASE, CO2_SAKOT, RANDOM_SAKOT, TIME_LIMIT
+from constants import GAME_TICK, CO2_BUDGET, SECURITY_BASE, CO2_SAKOT, RANDOM_SAKOT, TIME_LIMIT, WIN_REQUIREMENT
 import random
 
 import os.path
@@ -15,10 +15,15 @@ class Player:
         self.airports: list[AirPort] = []
         self.cache = {
             "airport_max_len": 0,
-            "airport_price_len": 0
+            "airport_price_len": 0,
+            "available_max_len": 0,
+            "available_price_max_len": 0
         }
         self.time_left = TIME_LIMIT
+        self.game_end = False
         self.available_airports: list[AirPort] = airports
+
+        self.calculate_cache()
 
     def create_player(self, airports: list[AirPort]):
         if os.path.isfile(f"profiles/{self.name}.json"):
@@ -42,6 +47,7 @@ class Player:
                     AVAILABLE_AIRPORTS: list[AirPort] = [
                         i for i in airports if i.name not in PLAYER_AIRPORTS]
                     self.available_airports = AVAILABLE_AIRPORTS
+                    self.calculate_cache()
             except:
                 return "Failed to load profile"
         else:
@@ -52,6 +58,7 @@ class Player:
 
     # Etene 1 peli tick
     def tick(self) -> None:
+        if self.game_end: return
         for i in self.airports:
             self.money += i.upgrades[0].get_effect() * GAME_TICK
             self.co2_used = max(
@@ -60,10 +67,11 @@ class Player:
             if self.co2_used > CO2_BUDGET:
                 self.money = max(0, self.money - CO2_SAKOT[random.randint(0, len(CO2_SAKOT) - 1)])
                 self.co2_used = 0
+                print("\x1b[2J\x1b[3J")
                 print("Sait sakon ilmasto rikkeestä.")
 
             if random.random() < (SECURITY_BASE * i.upgrades[2].get_effect()) * GAME_TICK:         # if Random value < (Base + (-Base) * (security/100)) / 100
-                
+                print("\x1b[2J\x1b[3J")
                 vakavuus = random.randint(1,100)
                 if vakavuus <= 10 and len(self.airports) > 1:
                     self.airports.pop(-1)
@@ -73,6 +81,8 @@ class Player:
                     print("Sait sakon turvallisuus rikkeestä.")
                 # Tämän funktion voi laittaa joskus purchase_airport funktioon
         self.time_left = max(0, self.time_left - GAME_TICK)
+        if self.time_left == 0 or self.money > WIN_REQUIREMENT:
+            self.game_end = True
 
     def give_airport(self, airport: AirPort) -> tuple[bool, str]:
         if airport.name in self.airports:
@@ -83,6 +93,8 @@ class Player:
             len(airport.name), self.cache["airport_max_len"])
         self.cache["airport_price_len"] = max(
             len(str(airport.price)), self.cache["airport_price_len"])
+
+        self.calculate_cache()
 
         self.remove_from_available(airport)
         return (True, "Airport given")
@@ -100,22 +112,32 @@ class Player:
         self.cache["airport_price_len"] = max(
             len(str(airport.price)), self.cache["airport_price_len"])
 
+        self.calculate_cache()
+
         self.remove_from_available(airport)
         return (True, "Purchase successful")
 
     def remove_from_available(self, airport: AirPort) -> None:
         self.available_airports.pop(self.available_airports.index(airport))
+    
+    def calculate_cache(self) -> None:
+        new_cache = [0, 0]
+        for i in self.available_airports:
+            new_cache[0] = max(new_cache[0], len(i.name))
+            new_cache[1] = max(new_cache[1], len(f"{i.price:.2f}"))
+        self.cache["available_max_len"], self.cache["available_price_max_len"] = new_cache
 
     # Path voi myöhemmin vaihtaa Upgrade luokka tyypiksi
     def upgrade_airport(self, airport: AirPort, path: int) -> tuple[bool, str]:
         upgrade = airport.upgrades[path]
-        if self.money < upgrade.get_price():
+        upgrade_price = upgrade.get_price()
+        if self.money < upgrade_price:
             return (False, "Insufficient funds")
         try_upgrade = upgrade.upgrade()
         if try_upgrade[0] == False:
             return try_upgrade
 
-        self.money -= upgrade.get_price()
+        self.money -= upgrade_price
 
         return (True, "Purchase successful")
 
