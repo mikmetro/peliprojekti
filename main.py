@@ -58,7 +58,7 @@ def console_runner():
     prev_tab = selected_tab
 
     HELP_MESSAGE = lambda: f"{CLR}{DOWN}1 - Etusivu{CLR}\n2 - Lentokentät{CLR}\n3 - Tallenna ({time_till_save}){CLR}\n4 - Lopeta{CLR}"
-    
+
     print("\x1b[2J\x1b[3J")
     while 1:
         # Näytä menu
@@ -84,7 +84,7 @@ def console_runner():
                     print(f"\x1b[7m{CLR}", end="")
                 print(i + f"\x1b[0m" + " "*5, end="")
             print("\x1b[0m\n")
-            
+
             if selected_tab == 0:
                 print("Valitse Enter napilla")
                 for index, i in enumerate(player.airports):
@@ -109,7 +109,11 @@ def console_runner():
                     print(f"{i.name}{" "*name_space}{price_indicator}${" "*price_space}{i.co2_generation:.0f}kg{CLR}\x1b[0m")
 
         elif current_menu == 11:
-            print(f"{player.airports[airport_index].name}\n")
+            try:
+                print(f"{player.airports[airport_index].name}\n")
+            except IndexError:
+                current_menu = 2
+                return
             ups = player.airports[airport_index].upgrades
 
             largest_name = [0,0,0]
@@ -117,7 +121,7 @@ def console_runner():
                 largest_name[0] = max(largest_name[0], len(i.name))
                 largest_name[1] = max(largest_name[1], len(i.display_effect()))
                 largest_name[2] = max(largest_name[2], len(i.display_price()))
-            
+
             print("Päivitä Enter napilla")
             for (index, i) in enumerate(ups):
                 if index == selected_index:
