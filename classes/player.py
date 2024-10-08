@@ -1,11 +1,13 @@
 import json
 from .airport import *
 from .upgrades import *
+from .db import *
 from constants import GAME_TICK, CO2_BUDGET, SECURITY_BASE, CO2_SAKOT, RANDOM_SAKOT, TIME_LIMIT, WIN_REQUIREMENT
 import random
 
 import os.path
 
+db = Database()
 
 class Player:
     def __init__(self, name: str, airports: list[AirPort]) -> None:
@@ -25,7 +27,7 @@ class Player:
 
         self.calculate_cache()
 
-    def create_player(self, airports: list[AirPort]):
+    def create_player(self, airports: list[AirPort]):        
         if os.path.isfile(f"profiles/{self.name}.json"):
             try:
                 with open(f"profiles/{self.name}.json", "r") as f:
@@ -37,10 +39,8 @@ class Player:
                     for i in user_data["airports"]:
                         airport = user_data["airports"][i]
                         ups = [airport["upgrades"][j] for j in range(3)]
-                        ups = (IncomeUpgrade(
-                            *ups[0].values()), Co2Upgrade(*ups[1].values()), SecurityUpgrade(*ups[2].values()))
-                        self.airports.append(AirPort(
-                            airport['id'], i, airport["country"], airport["price"], airport["co2_generation"], ups))
+                        ups = (IncomeUpgrade(*ups[0].values()), Co2Upgrade(*ups[1].values()), SecurityUpgrade(*ups[2].values()))
+                        self.airports.append(AirPort(airport['id'], i, airport["country"], airport["price"], airport["co2_generation"], ups))
                     self.cache = user_data["cache"]
                     PLAYER_AIRPORTS = [
                         airport.name for airport in self.airports]
@@ -52,7 +52,7 @@ class Player:
                 return "Failed to load profile"
         else:
             try:
-                self.save_profile()
+                db.add_player(self.name, self.money, self.co2_used, self.time_left)
             except:
                 return "Failed to create profile"
 
@@ -79,11 +79,11 @@ class Player:
                 else:
                     self.money = max(0, self.money - RANDOM_SAKOT[random.randint(0, len(RANDOM_SAKOT) - 1)])
                     print("Sait sakon turvallisuus rikkeestä.")
-                # Tämän funktion voi laittaa joskus purchase_airport funktioon
         self.time_left = max(0, self.time_left - GAME_TICK)
         if self.time_left == 0 or self.money > WIN_REQUIREMENT:
             self.game_end = True
 
+    # Tämän funktion voi laittaa joskus purchase_airport funktioon
     def give_airport(self, airport: AirPort) -> tuple[bool, str]:
         if airport.name in self.airports:
             return (False, "Airport already owned")
@@ -142,6 +142,7 @@ class Player:
         return (True, "Purchase successful")
 
     def save_profile(self) -> None:
+        db.update_player(self.name, self.money, self.co2_used, self.time_left)
         with open(f"profiles/{self.name}.json", "w") as f:
             x = {
                 "name": self.name,
