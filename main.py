@@ -67,7 +67,7 @@ def console_runner():
         prev_menu = current_menu
         prev_tab = selected_tab
         print(f"\n\n\n")
-        print(f"{TOP}Anna nimi: {player.name}{CLR}   Aikaa jäljellä: {player.display_time()}\n")
+        print(f"{TOP}Pelaajan nimi: {player.name}{CLR}   Aikaa jäljellä: {player.display_time()}\n")
 
         if current_menu == 99:
             print(f"\x1b[43m\x1b[30mVoitit pelin!\x1b[0m")
